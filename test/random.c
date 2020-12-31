@@ -74,5 +74,5 @@ void test(void *const b1, size_t nmemb, size_t size, func_obj_t func)
 int compar(const void *a, const void *b)
 {
 
-    return *(int *)a <= *(int *)b;
+    return *(int *)a - *(int *)b;
 }

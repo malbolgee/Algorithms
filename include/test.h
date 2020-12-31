@@ -27,7 +27,7 @@ extern inline bool is_ord(void *const b1, size_t nmemb, size_t size, __compar_fn
 
     char *base_ptr = (char *)b1;
     for (size_t i = 0; i < nmemb - 1; ++i)
-        if (compar(&base_ptr[size * (i + 1)], &base_ptr[size * i]) > 0)
+        if (compar(&base_ptr[size * i], &base_ptr[size * (i + 1)]) > 0)
             return false;
 
     return true;
@@ -40,7 +40,7 @@ extern inline bool is_same(void *const b1, void *const b2, size_t nmemb, size_t 
     char *base2_ptr = (char *)b2;
 
     for (size_t i = 0; i < nmemb; ++i)
-        if (compar(&base1_ptr[size * i], &base2_ptr[size * i]) == 0)
+        if (compar(&base1_ptr[size * i], &base2_ptr[size * i]))
             return false;
 
     return true;

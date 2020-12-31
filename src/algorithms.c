@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include "../include/algorithms.h"
 
 /** Byte-wise assign item of size SIZE. */
@@ -43,7 +42,7 @@ void insertion_sort(void *const base, size_t nmemb, size_t size, __compar_fn_t c
     {
         j = i - 1UL;
         ASSIGN(key, &base_ptr[i * size], size);
-        while (j >= 0 && compar(key, &base_ptr[j * size]) > 0)
+        while (j >= 0 && compar(key, &base_ptr[j * size]) < 0)
         {
             ASSIGN(&base_ptr[size * (j + 1)], &base_ptr[j * size], size);
             --j;
@@ -64,8 +63,8 @@ void selection_sort(void *const base, size_t nmemb, size_t size, __compar_fn_t c
     {
         min_idx = &base_ptr[i * size];
         for (size_t j = i + 1; j < nmemb; ++j)
-            if (compar(&base_ptr[j * size], min_idx) > 0)
-                min_idx = &base_ptr[j * size];
+            if (compar(min_idx, &base_ptr[size * j]) > 0) // min_idx has to be greater than arr[j];
+                min_idx = &base_ptr[size * j];
 
         SWAP(min_idx, &base_ptr[i * size], size);
     }
@@ -80,10 +79,10 @@ static void heapify(void *const base, size_t nmemb, int index, size_t size, __co
     int l = index * 2 + 1;
     int r = index * 2 + 2;
 
-    if (l < (int)nmemb && compar(&base_ptr[size * largest], &base_ptr[size * l]) > 0)
+    if (l < (int)nmemb && compar(&base_ptr[size * l], &base_ptr[size * largest]) > 0)
         largest = l;
 
-    if (r < (int)nmemb && compar(&base_ptr[size * largest], &base_ptr[size * r]) > 0)
+    if (r < (int)nmemb && compar(&base_ptr[size * r], &base_ptr[size * largest]) > 0)
         largest = r;
 
     if (largest != index)
@@ -119,7 +118,7 @@ static void _merge(void *const base, void *const tmp, int l, int m, int r, size_
 
     while (i <= m && j <= r)
     {
-        if (compar(&base_ptr[size * i], &base_ptr[size * j]) > 0)
+        if (compar(&base_ptr[size * i], &base_ptr[size * j]) < 0)
             ASSIGN(&tmp_ptr[size * k++], &base_ptr[size * i++], size);
         else
             ASSIGN(&tmp_ptr[size * k++], &base_ptr[size * j++], size);
@@ -166,7 +165,7 @@ void shell_sort(void *const base, size_t nmemb, size_t size, __compar_fn_t compa
         {
             int j;
             ASSIGN(tmp, &base_ptr[size * i], size);
-            for (j = i; j >= gap && compar(tmp, &base_ptr[size * (j - gap)]) > 0; j -= gap)
+            for (j = i; j >= gap && compar(tmp, &base_ptr[size * (j - gap)]) < 0; j -= gap)
                 ASSIGN(&base_ptr[size * j], &base_ptr[size * (j - gap)], size);
 
             ASSIGN(&base_ptr[size * j], tmp, size);
@@ -186,9 +185,9 @@ int lower_bound(void *const base, void *const key, size_t nmemb, size_t size, __
     while (low < hi)
     {
         int mid = low + (hi - low) / 2;
-        int comparison = compar(&base_ptr[size * mid], key);
+        int comparison = compar(key, &base_ptr[size * mid]);
 
-        if (comparison >= 0)
+        if (comparison <= 0)
             hi = mid;
         else
             low = mid + 1;
@@ -207,9 +206,9 @@ int upper_bound(void *const base, void *const key, size_t nmemb, size_t size, __
     while (low < hi)
     {
         int mid = low + (hi - low) / 2;
-        int comparison = compar(&base_ptr[size * mid], key);
+        int comparison = compar(key, &base_ptr[size * mid]);
 
-        if (comparison <= 0)
+        if (comparison >= 0)
             low = mid + 1;
         else
             hi = mid;
@@ -229,10 +228,10 @@ bool is_heap(void *const base, size_t nmemb, size_t size, __compar_fn_t compar)
         int l = i * 2 + 1;
         int r = i * 2 + 2;
 
-        if (compar(&base_ptr[size * l], &base_ptr[size * i]) > 0)
+        if (compar(&base_ptr[size * i], &base_ptr[size * l]) < 0)
             return false;
 
-        if (r < (int)nmemb && compar(&base_ptr[size * r], &base_ptr[size * i]) > 0)
+        if (r < (int)nmemb && compar(&base_ptr[size * i], &base_ptr[size * r]) < 0)
             return false;
     }
 
@@ -245,11 +244,35 @@ void *unique(void *const base, size_t nmemb, size_t size, __compar_fn_t compar)
     char *base_ptr = (char *)base;
 
     size_t j = 0;
-    for (size_t i = 0; i < nmemb; ++i)
-        if (compar(&base_ptr[size * i], &base_ptr[size * j]) > 0)
-            ASSIGN(&base_ptr[size * (++j)], &base_ptr[size * i], size);
+    for (size_t i = 1; i < nmemb; ++i)
+    {
 
+        if (compar(&base_ptr[size * i], &base_ptr[size * j]))
+            ASSIGN(&base_ptr[size * (++j)], &base_ptr[size * i], size);
+    }
     return (void *)&base_ptr[size * (j + 1)];
+}
+
+size_t erase(void *const first, void *const last, void *value, size_t size)
+{
+
+    char *first_ptr = (char *)first;
+    char *last_ptr = (char *)last;
+
+    // TODO: The erase function must shift the elements if they're not the last ones;
+    // At the momenent, this is not happening, I'm just assuming that the function
+    // will be used to erase the final portion of an array that has been 'uniquenized(?)'.
+
+    size_t erased = 0;
+    while (first_ptr <= last_ptr)
+    {
+
+        ASSIGN(first_ptr, value, size);
+        first_ptr += size;
+        ++erased;
+    }
+
+    return erased;
 }
 
 void *merge(void *const b1, size_t nmemb1, void *const b2, size_t nmemb2,
@@ -270,7 +293,7 @@ void *merge(void *const b1, size_t nmemb1, void *const b2, size_t nmemb2,
     while (i < nmemb1 && j < nmemb2)
     {
 
-        if (compar(&b1_ptr[size * i], &b2_ptr[size * j]) > 0)
+        if (compar(&b1_ptr[size * i], &b2_ptr[size * j]) < 0)
             ASSIGN(&b3_ptr[size * k++], &b1_ptr[size * i++], size);
         else
             ASSIGN(&b3_ptr[size * k++], &b2_ptr[size * j++], size);
@@ -299,7 +322,7 @@ int linear_search(void *const base, void *const key, size_t nmemb, size_t size, 
     char *base_ptr = (char *)base;
 
     for (size_t i = 0; i < nmemb; ++i)
-        if (compar(&base_ptr[size * i], key) > 0)
+        if (compar(key, &base_ptr[size * i]) == 0)
             return i;
 
     return -1;

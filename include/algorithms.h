@@ -53,6 +53,15 @@ bool is_heap(void *const base, size_t nmemb, size_t size, __compar_fn_t compar);
 void *unique(void *const base, size_t nmemb, size_t size, __compar_fn_t compar);
 
 /**
+ * Removes from the array either a single element (first == last) or a range of elements
+ * ([firts, last)). Using VALUE to assign a garbage value to the erased positions, since the
+ * size of the array is not effectively decreased. the function returns the number
+ * of elements removed.
+ *  
+*/
+size_t erase(void *const first, void *const last, void *value, size_t size);
+
+/**
  * Merges two sorted ranges [b1, nmemb) and [b2, nmemb2) 
  * into one sorted range beginning at b3.
 */

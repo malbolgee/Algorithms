@@ -5,8 +5,7 @@
 #include "../include/logger.h"
 #include "../include/algorithms.h"
 
-int compar_ord(const void *a, const void *b);
-int compar_same(const void *a, const void *b);
+int compar(const void *a, const void *b);
 void test(void *const b1, void *const b2, size_t nmemb, size_t size, func_obj_t func);
 
 #define INIT(FUNC)                    \
@@ -47,9 +46,9 @@ void test(void *const b1, void *const b2, size_t nmemb, size_t size, func_obj_t 
     for (size_t i = 0; i < nmemb; ++i)
         printf("%3d%s", *(int *)(base_ptr + size * i), i < nmemb - 1 ? ", " : "] => ");
 
-    func.f(b1, nmemb, size, compar_ord);
+    func.f(b1, nmemb, size, compar);
 
-    bool status = is_same(b1, b2, nmemb, size, compar_same);
+    bool status = is_same(b1, b2, nmemb, size, compar);
 
     LOG(func.func_name, status);
 
@@ -64,14 +63,8 @@ void test(void *const b1, void *const b2, size_t nmemb, size_t size, func_obj_t 
     putchar_unlocked('\n');
 }
 
-int compar_ord(const void *a, const void *b)
+int compar(const void *a, const void *b)
 {
 
-    return *(int *)a <= *(int *)b;
-}
-
-int compar_same(const void *a, const void *b)
-{
-
-    return *(int *)a == *(int *)b;
+    return *(int *)a - *(int *)b;
 }
